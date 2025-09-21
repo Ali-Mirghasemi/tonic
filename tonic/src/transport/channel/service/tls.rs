@@ -105,7 +105,7 @@ impl TlsConnector {
         #[cfg(feature = "danger")]
         if let Some(verifier) = verifier {
             let mut x = DangerousClientConfig { cfg: &mut config };
-            x.set_certificate_verifier(verifier);
+            x.set_certificate_verifier(verifier.clone());
         }
 
         Ok(Self {
