@@ -29,7 +29,7 @@ impl TlsAcceptor {
         ignore_client_order: bool,
         use_key_log: bool,
         timeout: Option<Duration>,
-        #[cfg(feature = "danger")] verifier: Option<&Arc<dyn ClientCertVerifier>>,
+        #[cfg(feature = "danger")] custom_verifier: Option<&Arc<dyn ClientCertVerifier>>,
     ) -> Result<Self, crate::BoxError> {
         let builder = ServerConfig::builder();
 
@@ -43,7 +43,7 @@ impl TlsAcceptor {
 
                 #[cfg(feature = "danger")] 
                 {
-                    verifier = if let Some(verifier) = verifier {
+                    verifier = if let Some(verifier) = custom_verifier {
                         verifier.clone()
                     } else {
                         if client_auth_optional {
