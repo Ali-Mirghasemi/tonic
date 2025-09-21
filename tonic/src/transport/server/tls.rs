@@ -100,8 +100,8 @@ impl ServerTlsConfig {
         TlsAcceptor::new(
             self.identity.as_ref().unwrap(),
             self.client_ca_root.as_ref(),
+            self.verifier.as_ref(),
             self.client_auth_optional,
-            self.verifier,
             self.ignore_client_order,
             self.use_key_log,
             self.timeout,
