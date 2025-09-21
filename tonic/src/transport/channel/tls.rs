@@ -4,6 +4,8 @@ use crate::transport::{
     Error,
 };
 use http::Uri;
+#[cfg(feature = "danger")]
+use tokio_rustls::rustls::client::danger::ServerCertVerifier;
 use std::time::Duration;
 use tokio_rustls::rustls::pki_types::TrustAnchor;
 
@@ -12,6 +14,8 @@ use tokio_rustls::rustls::pki_types::TrustAnchor;
 pub struct ClientTlsConfig {
     domain: Option<String>,
     certs: Vec<Certificate>,
+    #[cfg(feature = "danger")]
+    verifier: Option<Arc<dyn ServerCertVerifier>>,
     trust_anchors: Vec<TrustAnchor<'static>>,
     identity: Option<Identity>,
     assume_http2: bool,
@@ -133,6 +137,15 @@ impl ClientTlsConfig {
         }
     }
 
+    /// Sets custom `ServerCertVerifier`.
+    #[cfg(feature = "danger")]
+    pub fn verifier(self, verifier: Arc<dyn ServerCertVerifier>) -> Self {
+        ClientTlsConfig {
+            verifier: Some(verifier),
+            ..self
+        }
+    }
+
     pub(crate) fn into_tls_connector(self, uri: &Uri) -> Result<TlsConnector, crate::BoxError> {
         let domain = match &self.domain {
             Some(domain) => domain,
@@ -150,6 +163,8 @@ impl ClientTlsConfig {
             self.with_native_roots,
             #[cfg(feature = "tls-webpki-roots")]
             self.with_webpki_roots,
+            #[cfg(feature = "danger")]
+            self.verifier,
         )
     }
 }
