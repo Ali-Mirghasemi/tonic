@@ -6,6 +6,8 @@ use crate::transport::{
 use http::Uri;
 #[cfg(feature = "danger")]
 use tokio_rustls::rustls::client::danger::ServerCertVerifier;
+#[cfg(feature = "danger")]
+use std::sync::Arc;
 use std::time::Duration;
 use tokio_rustls::rustls::pki_types::TrustAnchor;
 
@@ -164,7 +166,7 @@ impl ClientTlsConfig {
             #[cfg(feature = "tls-webpki-roots")]
             self.with_webpki_roots,
             #[cfg(feature = "danger")]
-            self.verifier,
+            self.verifier.as_ref(),
         )
     }
 }
