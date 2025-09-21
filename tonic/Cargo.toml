@@ -49,6 +49,7 @@ channel = [
   "dep:hyper-timeout",
 ]
 transport = ["server", "channel"]
+danger = ["transport"]
 
 # [[bench]]
 # name = "bench_main"
