@@ -10,6 +10,7 @@ use crate::transport::tls::{Certificate, Identity};
 pub struct ServerTlsConfig {
     identity: Option<Identity>,
     client_ca_root: Option<Certificate>,
+    #[cfg(feature = "danger")]
     verifier: Option<Arc<dyn ClientCertVerifier>>,
     client_auth_optional: bool,
     ignore_client_order: bool,
@@ -89,6 +90,7 @@ impl ServerTlsConfig {
     /// 
     /// # Default
     /// By default, this option is none and use `WebPkiClientVerifier`
+    #[cfg(feature = "danger")]
     pub fn verifier(self, verifier: Arc<dyn ClientCertVerifier>) -> Self {
         ServerTlsConfig {
             verifier: Some(verifier),
@@ -100,11 +102,11 @@ impl ServerTlsConfig {
         TlsAcceptor::new(
             self.identity.as_ref().unwrap(),
             self.client_ca_root.as_ref(),
-            self.verifier.as_ref(),
             self.client_auth_optional,
             self.ignore_client_order,
             self.use_key_log,
             self.timeout,
+            #[cfg(feature = "danger")] self.verifier.as_ref(),
         )
     }
 }

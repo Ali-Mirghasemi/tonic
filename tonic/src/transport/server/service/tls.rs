@@ -25,11 +25,11 @@ impl TlsAcceptor {
     pub(crate) fn new(
         identity: &Identity,
         client_ca_root: Option<&Certificate>,
-        verifier: Option<&Arc<dyn ClientCertVerifier>>,
         client_auth_optional: bool,
         ignore_client_order: bool,
         use_key_log: bool,
         timeout: Option<Duration>,
+        #[cfg(feature = "danger")] verifier: Option<&Arc<dyn ClientCertVerifier>>,
     ) -> Result<Self, crate::BoxError> {
         let builder = ServerConfig::builder();
 
@@ -38,15 +38,31 @@ impl TlsAcceptor {
             Some(cert) => {
                 let mut roots = RootCertStore::empty();
                 roots.add_parsable_certificates(convert_certificate_to_pki_types(cert)?);
-                let verifier = if let Some(verifier) = verifier {
-                    verifier.clone()
-                } else {
-                    if client_auth_optional {
+
+                let verifier;
+
+                #[cfg(feature = "danger")] 
+                {
+                    verifier = if let Some(verifier) = verifier {
+                        verifier.clone()
+                    } else {
+                        if client_auth_optional {
+                            WebPkiClientVerifier::builder(roots.into()).allow_unauthenticated()
+                        } else {
+                            WebPkiClientVerifier::builder(roots.into())
+                        }.build()?
+                    };
+                };
+
+                #[cfg(not(feature ="danger"))]
+                {
+                    verifier = if client_auth_optional {
                         WebPkiClientVerifier::builder(roots.into()).allow_unauthenticated()
                     } else {
                         WebPkiClientVerifier::builder(roots.into())
                     }.build()?
                 };
+                
                 builder.with_client_cert_verifier(verifier)
             }
         };
