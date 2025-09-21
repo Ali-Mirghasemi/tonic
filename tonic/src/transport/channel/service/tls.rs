@@ -4,7 +4,7 @@ use std::{sync::Arc, time::Duration};
 use hyper_util::rt::TokioIo;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::time;
-#[cfg(feature = "danger")]
+#[cfg(feature = "rustls-danger")]
 use tokio_rustls::rustls::client::danger::ServerCertVerifier;
 use tokio_rustls::{
     rustls::{
@@ -42,7 +42,7 @@ impl TlsConnector {
         timeout: Option<Duration>,
         #[cfg(feature = "tls-native-roots")] with_native_roots: bool,
         #[cfg(feature = "tls-webpki-roots")] with_webpki_roots: bool,
-        #[cfg(feature = "danger")] verifier: Option<&Arc<dyn ServerCertVerifier>>,
+        #[cfg(feature = "rustls-danger")] verifier: Option<&Arc<dyn ServerCertVerifier>>,
     ) -> Result<Self, crate::BoxError> {
         fn with_provider(
             provider: Arc<crypto::CryptoProvider>,
@@ -102,7 +102,7 @@ impl TlsConnector {
 
         config.alpn_protocols.push(ALPN_H2.into());
 
-        #[cfg(feature = "danger")]
+        #[cfg(feature = "rustls-danger")]
         if let Some(verifier) = verifier {
             let mut x = DangerousClientConfig { cfg: &mut config };
             x.set_certificate_verifier(verifier.clone());

@@ -29,7 +29,7 @@ impl TlsAcceptor {
         ignore_client_order: bool,
         use_key_log: bool,
         timeout: Option<Duration>,
-        #[cfg(feature = "danger")] custom_verifier: Option<&Arc<dyn ClientCertVerifier>>,
+        #[cfg(feature = "rustls-danger")] custom_verifier: Option<&Arc<dyn ClientCertVerifier>>,
     ) -> Result<Self, crate::BoxError> {
         let builder = ServerConfig::builder();
 
@@ -41,7 +41,7 @@ impl TlsAcceptor {
 
                 let verifier;
 
-                #[cfg(feature = "danger")] 
+                #[cfg(feature = "rustls-danger")] 
                 {
                     verifier = if let Some(verifier) = custom_verifier {
                         verifier.clone()
@@ -54,7 +54,7 @@ impl TlsAcceptor {
                     };
                 };
 
-                #[cfg(not(feature ="danger"))]
+                #[cfg(not(feature ="rustls-danger"))]
                 {
                     verifier = if client_auth_optional {
                         WebPkiClientVerifier::builder(roots.into()).allow_unauthenticated()

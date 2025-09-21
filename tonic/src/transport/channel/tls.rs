@@ -4,9 +4,9 @@ use crate::transport::{
     Error,
 };
 use http::Uri;
-#[cfg(feature = "danger")]
+#[cfg(feature = "rustls-danger")]
 use tokio_rustls::rustls::client::danger::ServerCertVerifier;
-#[cfg(feature = "danger")]
+#[cfg(feature = "rustls-danger")]
 use std::sync::Arc;
 use std::time::Duration;
 use tokio_rustls::rustls::pki_types::TrustAnchor;
@@ -16,7 +16,7 @@ use tokio_rustls::rustls::pki_types::TrustAnchor;
 pub struct ClientTlsConfig {
     domain: Option<String>,
     certs: Vec<Certificate>,
-    #[cfg(feature = "danger")]
+    #[cfg(feature = "rustls-danger")]
     verifier: Option<Arc<dyn ServerCertVerifier>>,
     trust_anchors: Vec<TrustAnchor<'static>>,
     identity: Option<Identity>,
@@ -140,7 +140,7 @@ impl ClientTlsConfig {
     }
 
     /// Sets custom `ServerCertVerifier`.
-    #[cfg(feature = "danger")]
+    #[cfg(feature = "rustls-danger")]
     pub fn verifier(self, verifier: Arc<dyn ServerCertVerifier>) -> Self {
         ClientTlsConfig {
             verifier: Some(verifier),
@@ -165,7 +165,7 @@ impl ClientTlsConfig {
             self.with_native_roots,
             #[cfg(feature = "tls-webpki-roots")]
             self.with_webpki_roots,
-            #[cfg(feature = "danger")]
+            #[cfg(feature = "rustls-danger")]
             self.verifier.as_ref(),
         )
     }
