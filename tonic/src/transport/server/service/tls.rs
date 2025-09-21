@@ -3,7 +3,7 @@ use std::{fmt, sync::Arc, time::Duration};
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::time;
 use tokio_rustls::{
-    rustls::{server::WebPkiClientVerifier, RootCertStore, ServerConfig},
+    rustls::{server::{WebPkiClientVerifier, danger::ClientCertVerifier}, RootCertStore, ServerConfig},
     server::TlsStream,
     TlsAcceptor as RustlsAcceptor,
 };
@@ -25,6 +25,7 @@ impl TlsAcceptor {
     pub(crate) fn new(
         identity: &Identity,
         client_ca_root: Option<&Certificate>,
+        verifier: Option<Arc<dyn ClientCertVerifier>>,
         client_auth_optional: bool,
         ignore_client_order: bool,
         use_key_log: bool,
@@ -37,12 +38,15 @@ impl TlsAcceptor {
             Some(cert) => {
                 let mut roots = RootCertStore::empty();
                 roots.add_parsable_certificates(convert_certificate_to_pki_types(cert)?);
-                let verifier = if client_auth_optional {
-                    WebPkiClientVerifier::builder(roots.into()).allow_unauthenticated()
+                let verifier = if let Some(verifier) = verifier {
+                    verifier
                 } else {
-                    WebPkiClientVerifier::builder(roots.into())
-                }
-                .build()?;
+                    if client_auth_optional {
+                        WebPkiClientVerifier::builder(roots.into()).allow_unauthenticated()
+                    } else {
+                        WebPkiClientVerifier::builder(roots.into())
+                    }.build()?;
+                };
                 builder.with_client_cert_verifier(verifier)
             }
         };

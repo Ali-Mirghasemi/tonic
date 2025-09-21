@@ -1,4 +1,6 @@
-use std::{fmt, time::Duration};
+use std::{fmt, sync::Arc, time::Duration};
+
+use tokio_rustls::rustls::server::danger::ClientCertVerifier;
 
 use super::service::TlsAcceptor;
 use crate::transport::tls::{Certificate, Identity};
@@ -8,6 +10,7 @@ use crate::transport::tls::{Certificate, Identity};
 pub struct ServerTlsConfig {
     identity: Option<Identity>,
     client_ca_root: Option<Certificate>,
+    verifier: Option<Arc<dyn ClientCertVerifier>>,
     client_auth_optional: bool,
     ignore_client_order: bool,
     use_key_log: bool,
@@ -82,11 +85,23 @@ impl ServerTlsConfig {
         }
     }
 
+    /// Sets custom `ClientCertVerifier`.
+    /// 
+    /// # Default
+    /// By default, this option is none and use `WebPkiClientVerifier`
+    pub fn verifier(self, verifier: Arc<dyn ClientCertVerifier>) -> Self {
+        ServerTlsConfig {
+            verifier: Some(verifier),
+            ..self
+        }
+    }
+
     pub(crate) fn tls_acceptor(&self) -> Result<TlsAcceptor, crate::BoxError> {
         TlsAcceptor::new(
             self.identity.as_ref().unwrap(),
             self.client_ca_root.as_ref(),
             self.client_auth_optional,
+            self.verifier,
             self.ignore_client_order,
             self.use_key_log,
             self.timeout,
